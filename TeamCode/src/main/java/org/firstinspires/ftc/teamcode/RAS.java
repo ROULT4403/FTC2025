@@ -140,9 +140,9 @@ public class RAS extends LinearOpMode {
             torreta.setPower(0.8);
             //Bumpers
             if (gamepad2.right_bumper) {
-                tpos -= 4;
-            } else if (gamepad2.left_bumper) {
                 tpos += 4;
+            } else if (gamepad2.left_bumper) {
+                tpos -= 4;
             }
             torreta.setTargetPosition(tpos);
             //triggers
@@ -161,25 +161,24 @@ public class RAS extends LinearOpMode {
 
             //Buttons
             if (gamepad2.a) {
-                shoot1.setPower(1);
-                shoot2.setPower(1);
-
+                shoot1.setPower(.95);
+                shoot2.setPower(.95);
 
             } else if (gamepad2.b) {
-                shoot1.setPower(0.95);
-                shoot2.setPower(0.95);
+                shoot1.setPower(0.90);
+                shoot2.setPower(0.90);
 
             } else if (gamepad2.x) {
-                shoot1.setPower(0.8);
-                shoot2.setPower(0.8);
+                shoot1.setPower(0.85);
+                shoot2.setPower(0.85);
 
             }else if (gamepad2.y) {
-                shoot1.setPower(0.7);
-                shoot2.setPower(0.7);
+                shoot1.setPower(0.70);
+                shoot2.setPower(0.70);
 
             } else {
-                shoot1.setPower(.5);
-                shoot2.setPower(.5);
+                shoot1.setPower(0);
+                shoot2.setPower(0);
             }
 
 
