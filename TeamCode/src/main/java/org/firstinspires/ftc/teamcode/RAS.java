@@ -26,6 +26,9 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.Range;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+
 @com.qualcomm.robotcore.eventloop.opmode.TeleOp(name="RAS", group="Linear Opmode")
 
 public class RAS extends LinearOpMode {
@@ -35,6 +38,8 @@ public class RAS extends LinearOpMode {
     DcMotor backRightMotor = null;
     DcMotor torreta = null;
     DcMotor intake = null;
+    GoBildaPinpointDriver odo; // Declare OpMode member for the Odometry Computer
+    private double driveVelocityCap = 0.95;
 
 
     //recently addeed
@@ -42,12 +47,23 @@ public class RAS extends LinearOpMode {
 
     DcMotor shoot2 = null;
 
+    //RPM
+    double output;
+    double startTime = (System.nanoTime() * 1e-9);
+    double endTime = (System.nanoTime()*1e-9);
+    int endTicks = 0;
+    int startTicks = 0;
+
+    // ...esperas un intervalo corto...
 
 
 
+   // public void power(double output){
+   //     shoot1.setPower(output);
+   //     shoot2.setPower(output);
+   //}
     private int tpos = 0;
     // might be take out:
-
 
     @Override
     public void runOpMode() {
@@ -57,14 +73,11 @@ public class RAS extends LinearOpMode {
         backLeftMotor = hardwareMap.get(DcMotor.class, "BCKleftDrive");
         backRightMotor = hardwareMap.get(DcMotor.class, "BCKrightDrive");
 
-
-
-
-
         torreta = hardwareMap.get(DcMotor.class, "torreta");
         shoot1 = hardwareMap.get(DcMotor.class, "shooter1");
         shoot2 = hardwareMap.get(DcMotor.class, "shooter2");
         intake = hardwareMap.get(DcMotor.class, "intake");
+        odo = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
 
         frontLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         frontLeftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -97,13 +110,11 @@ public class RAS extends LinearOpMode {
         intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
 
-
         torreta.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         torreta.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         torreta.setTargetPosition(tpos);
         torreta.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
 
         // Invertimos un lado para que todos avancen hacia adelante
         frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -113,36 +124,69 @@ public class RAS extends LinearOpMode {
         // Espera a que empiece el match
         waitForStart();
 
+        odo.setOffsets(-155,75, DistanceUnit.MM);
+
         // Loop principal de teleop
         while (opModeIsActive()) {
 
-            // Lectura de los joysticks
-            double y = gamepad2.left_stick_y;  // Adelante / atrás (invertido porque arriba es negativo)
-            double x = -gamepad2.left_stick_x * 1.1; // Strafe (con pequeño ajuste)
-            double rx = -gamepad2.right_stick_x; // Rotación
+            //power(output);
+
+            odo.update();
+            if (gamepad2.options) {
+                odo.recalibrateIMU();
+                odo.resetPosAndIMU();
+            }
+            // slow down method
+            if (gamepad2.left_bumper) {
+                driveVelocityCap = .3;
+
+            } else {
+                driveVelocityCap = .95;
+            }
+
+
+
+            odo.update();
+            double botheading = odo.getHeading(AngleUnit.RADIANS);
+
+            double fwd = gamepad2.left_stick_y;
+            double strafe = -gamepad2.left_stick_x * 1.1;
+            //Quantity to turn by (turn)
+            double turn = gamepad2.right_stick_x;
+            double roty = strafe * Math.sin(-botheading) + fwd * Math.cos(-botheading);
+            double rotx = strafe * Math.cos(-botheading) - fwd * Math.sin(-botheading);
 
             // Fórmulas para mecanum drive
-            double frontLeftPower = y + x + rx;
-            double backLeftPower = y - x + rx;
-            double frontRightPower = y - x - rx;
-            double backRightPower = y + x - rx;
+            double denominator = Math.max(Math.abs(fwd) + Math.abs(strafe) + Math.abs(turn), 1);
+            double frontLeftPower = ((roty + rotx + turn) / denominator)*driveVelocityCap;
+            double backLeftPower = ((roty - rotx + turn) / denominator)*driveVelocityCap;
+            double frontRightPower = ((roty - rotx - turn) / denominator)*driveVelocityCap;
+            double backRightPower = ((roty + rotx - turn )/ denominator)*driveVelocityCap;
 
             // Normalizamos si algún valor > 1
 
-            double max = (Math.abs(y) + Math.abs(x) + Math.abs(rx));
-            frontLeftMotor.setPower(frontLeftPower / max);
-            backLeftMotor.setPower(backLeftPower / max);
-            frontRightMotor.setPower(frontRightPower / max);
-            backRightMotor.setPower(backRightPower / max);
 
+            frontRightMotor.setPower(backLeftPower);
+            frontLeftMotor.setPower(backRightPower);
+            backRightMotor.setPower(frontLeftPower);
+            backLeftMotor.setPower(frontRightPower);
+
+            //RPM
+            endTime = (System.nanoTime()*1e-9);
+            endTicks = shoot1.getCurrentPosition();
+            double cycletime = (endTime-startTime);
+            double ticksPerSec = (endTicks - startTicks)/cycletime;
+            double rpm = (ticksPerSec / 28)*60;
+            startTicks = shoot1.getCurrentPosition();
+            startTime = (System.nanoTime()*1e-9);
 
 
             torreta.setPower(0.8);
             //Bumpers
-            if (gamepad2.right_bumper) {
-                tpos += 4;
-            } else if (gamepad2.left_bumper) {
-                tpos -= 4;
+            if (gamepad1.right_bumper) {
+                tpos += 8;
+            } else if (gamepad1.left_bumper) {
+                tpos -= 8;
             }
             torreta.setTargetPosition(tpos);
             //triggers
@@ -150,9 +194,7 @@ public class RAS extends LinearOpMode {
                 intake.setPower(-0.9);
 
             }else if(gamepad2.left_trigger > 0.5) {
-                intake.setPower(0.3);
-                shoot1.setPower(-0.3);
-                shoot2.setPower(-0.3);
+                intake.setPower(0.4);
 
             }else{
                 intake.setPower(0);
@@ -160,21 +202,21 @@ public class RAS extends LinearOpMode {
 
 
             //Buttons
-            if (gamepad2.a) {
-                shoot1.setPower(.95);
-                shoot2.setPower(.95);
+            if (gamepad1.a) {
+                shoot1.setPower(.85);
+                shoot2.setPower(.85);
 
-            } else if (gamepad2.b) {
-                shoot1.setPower(0.90);
-                shoot2.setPower(0.90);
-
-            } else if (gamepad2.x) {
-                shoot1.setPower(0.85);
-                shoot2.setPower(0.85);
-
-            }else if (gamepad2.y) {
+            } else if (gamepad1.b) {
                 shoot1.setPower(0.70);
                 shoot2.setPower(0.70);
+
+            } else if (gamepad1.x) {
+                shoot1.setPower(0.65);
+                shoot2.setPower(0.65);
+
+            }else if (gamepad1.y) {
+                shoot1.setPower(0.5);
+                shoot2.setPower(0.5);
 
             } else {
                 shoot1.setPower(0);
@@ -189,17 +231,25 @@ public class RAS extends LinearOpMode {
 
 
 
-
             //Telemetría para ver valores en Driver Station
-            telemetry.addData("Front Left", frontLeftPower / max);
-            telemetry.addData("Back Left", backLeftPower / max);
-            telemetry.addData("Front Right", frontRightPower / max);
-            telemetry.addData("Back Right", backRightPower / max);
+            telemetry.addData("Front Left", frontLeftPower);
+            telemetry.addData("Back Left", backLeftPower);
+            telemetry.addData("Back Right", frontRightPower);
+            telemetry.addData("Front Right", backRightPower);
+            telemetry.addData("bot heading", botheading);
+            telemetry.addData("FWD/BCK deadwheel", odo.getEncoderX());
+            telemetry.addData("L/R deadwheel", odo.getEncoderY());
             telemetry.addData("Intake", intake.getPower());
             //telemetry.addData("Torreta", torreta.getPower());
             telemetry.addData("Shooter1", shoot1.getPower());
             telemetry.addData("Shooter2", shoot2.getPower());
             telemetry.addData("Torreta", torreta.getTargetPosition());
+            telemetry.addData("RPM shooter" , rpm);
+            telemetry.addData("ticks per second" , ticksPerSec);
+            telemetry.addData("process time" , cycletime);
+            telemetry.addData("start ticks" , startTicks);
+            telemetry.addData("end ticks" , endTicks);
+
             telemetry.update();
 
         }
