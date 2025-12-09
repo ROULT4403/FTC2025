@@ -24,6 +24,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -32,6 +33,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 @com.qualcomm.robotcore.eventloop.opmode.TeleOp(name="RAS", group="Linear Opmode")
 
 public class RAS extends LinearOpMode {
+
+
     DcMotor frontLeftMotor = null;
     DcMotor backLeftMotor = null;
     DcMotor frontRightMotor = null;
@@ -39,31 +42,48 @@ public class RAS extends LinearOpMode {
     DcMotor torreta = null;
     DcMotor intake = null;
     GoBildaPinpointDriver odo; // Declare OpMode member for the Odometry Computer
-    private double driveVelocityCap = 0.95;
+    private double driveVelocityCap = 1;
 
+    Servo palito = null;
 
     //recently addeed
     DcMotor shoot1 = null;
 
     DcMotor shoot2 = null;
 
+    //PID
+    double current_error = 0;
+    double current_time=0;
+
+    double k_p = 0.9;
+
+    double p = 0;
+
+    double i = 0;
+
+    double d = 0;
+
+    double k_i = 0;
+
+    double max_i = 0;
+
+    double k_d = 0;
+
+    double output = 0;
+    //The variable startime is used as currentime
+
+    double previous_error = 0;
+    double previous_time = 0;
+
+    int targetRPM=0;
+
     //RPM
-    double output;
-    double startTime = (System.nanoTime() * 1e-9);
+    double startTime = (System.nanoTime()*1e-9);
     double endTime = (System.nanoTime()*1e-9);
     int endTicks = 0;
     int startTicks = 0;
 
-    // ...esperas un intervalo corto...
-
-
-
-   // public void power(double output){
-   //     shoot1.setPower(output);
-   //     shoot2.setPower(output);
-   //}
     private int tpos = 0;
-    // might be take out:
 
     @Override
     public void runOpMode() {
@@ -78,6 +98,7 @@ public class RAS extends LinearOpMode {
         shoot2 = hardwareMap.get(DcMotor.class, "shooter2");
         intake = hardwareMap.get(DcMotor.class, "intake");
         odo = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
+        palito = hardwareMap.get(Servo.class, "palito");
 
         frontLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         frontLeftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -124,7 +145,11 @@ public class RAS extends LinearOpMode {
         // Espera a que empiece el match
         waitForStart();
 
-        odo.setOffsets(-155,75, DistanceUnit.MM);
+        odo.setOffsets(-155, 75, DistanceUnit.MM);
+        odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+        odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.REVERSED);
+        odo.resetPosAndIMU();
+
 
         // Loop principal de teleop
         while (opModeIsActive()) {
@@ -134,17 +159,21 @@ public class RAS extends LinearOpMode {
             odo.update();
             if (gamepad2.options) {
                 odo.recalibrateIMU();
-                odo.resetPosAndIMU();
             }
             // slow down method
             if (gamepad2.left_bumper) {
                 driveVelocityCap = .3;
 
             } else {
-                driveVelocityCap = .95;
+                driveVelocityCap = 1;
             }
 
+            if (gamepad1.right_trigger>0.5) {
+                palito.setPosition(1);
 
+            } else {
+                palito.setPosition(0);
+            }
 
             odo.update();
             double botheading = odo.getHeading(AngleUnit.RADIANS);
@@ -158,10 +187,10 @@ public class RAS extends LinearOpMode {
 
             // Fórmulas para mecanum drive
             double denominator = Math.max(Math.abs(fwd) + Math.abs(strafe) + Math.abs(turn), 1);
-            double frontLeftPower = ((roty + rotx + turn) / denominator)*driveVelocityCap;
-            double backLeftPower = ((roty - rotx + turn) / denominator)*driveVelocityCap;
-            double frontRightPower = ((roty - rotx - turn) / denominator)*driveVelocityCap;
-            double backRightPower = ((roty + rotx - turn )/ denominator)*driveVelocityCap;
+            double frontLeftPower = ((roty + rotx + turn) / denominator) * driveVelocityCap;
+            double backLeftPower = ((roty - rotx + turn) / denominator) * driveVelocityCap;
+            double frontRightPower = ((roty - rotx - turn) / denominator) * driveVelocityCap;
+            double backRightPower = ((roty + rotx - turn) / denominator) * driveVelocityCap;
 
             // Normalizamos si algún valor > 1
 
@@ -172,55 +201,51 @@ public class RAS extends LinearOpMode {
             backLeftMotor.setPower(frontRightPower);
 
             //RPM
-            endTime = (System.nanoTime()*1e-9);
+            endTime = (System.nanoTime() * 1e-9);
             endTicks = shoot1.getCurrentPosition();
-            double cycletime = (endTime-startTime);
-            double ticksPerSec = (endTicks - startTicks)/cycletime;
-            double rpm = (ticksPerSec / 28)*60;
+            double cycletime = (endTime - startTime);
+            double ticksPerSec = (endTicks - startTicks) / cycletime;
+            double rpm = (ticksPerSec / 28) * 60;
             startTicks = shoot1.getCurrentPosition();
-            startTime = (System.nanoTime()*1e-9);
+            startTime = (System.nanoTime() * 1e-9);
 
 
             torreta.setPower(0.8);
             //Bumpers
             if (gamepad1.right_bumper) {
-                tpos += 8;
+                tpos += 18;
             } else if (gamepad1.left_bumper) {
-                tpos -= 8;
+                tpos -= 18;
             }
             torreta.setTargetPosition(tpos);
             //triggers
             if (gamepad2.right_trigger > 0.5) {
                 intake.setPower(-0.9);
 
-            }else if(gamepad2.left_trigger > 0.5) {
-                intake.setPower(0.4);
+            } else if (gamepad2.left_trigger > 0.5) {
+                intake.setPower(0.5);
 
-            }else{
+            } else {
                 intake.setPower(0);
             }
 
 
             //Buttons
             if (gamepad1.a) {
-                shoot1.setPower(.85);
-                shoot2.setPower(.85);
+                targetRPM =4500;
 
             } else if (gamepad1.b) {
-                shoot1.setPower(0.70);
-                shoot2.setPower(0.70);
+                targetRPM =3700;
 
             } else if (gamepad1.x) {
-                shoot1.setPower(0.65);
-                shoot2.setPower(0.65);
 
-            }else if (gamepad1.y) {
-                shoot1.setPower(0.5);
-                shoot2.setPower(0.5);
+                targetRPM = 3500;
+
+            } else if (gamepad1.y) {
+                targetRPM = 2500;
 
             } else {
-                shoot1.setPower(0);
-                shoot2.setPower(0);
+                targetRPM = 0;
             }
 
 
@@ -228,8 +253,34 @@ public class RAS extends LinearOpMode {
                 tpos = 3600;
             }
 
+            if (targetRPM > 0) {
+                current_time = startTime;
+                current_error = targetRPM - rpm;
+
+                p = k_p * current_error;
+
+                i += k_i * (current_error * (current_time - startTicks));
 
 
+                if (i > max_i) {
+                    i = max_i;
+                } else if (i < -max_i) {
+                    i = -max_i;
+                }
+
+                d = k_d * (current_error - previous_error) / (current_time - previous_time);
+
+                output = p + i + d;
+                shoot1.setPower(output);
+                shoot2.setPower(output);
+            } else if (targetRPM == 0) {
+                shoot1.setPower(0);
+                shoot2.setPower(0);
+            }
+
+
+            previous_error = current_error;
+            previous_time = current_time;
 
             //Telemetría para ver valores en Driver Station
             telemetry.addData("Front Left", frontLeftPower);
@@ -244,11 +295,13 @@ public class RAS extends LinearOpMode {
             telemetry.addData("Shooter1", shoot1.getPower());
             telemetry.addData("Shooter2", shoot2.getPower());
             telemetry.addData("Torreta", torreta.getTargetPosition());
-            telemetry.addData("RPM shooter" , rpm);
-            telemetry.addData("ticks per second" , ticksPerSec);
-            telemetry.addData("process time" , cycletime);
-            telemetry.addData("start ticks" , startTicks);
-            telemetry.addData("end ticks" , endTicks);
+            telemetry.addData("RPM shooter", rpm);
+            telemetry.addData("Target RPM shooter", targetRPM);
+            telemetry.addData("Error:", current_error);
+            telemetry.addData("ticks per second", ticksPerSec);
+            telemetry.addData("process time", cycletime);
+            telemetry.addData("start ticks", startTicks);
+            telemetry.addData("end ticks", endTicks);
 
             telemetry.update();
 
