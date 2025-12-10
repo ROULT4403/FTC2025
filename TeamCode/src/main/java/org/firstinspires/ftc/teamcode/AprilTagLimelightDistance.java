@@ -23,7 +23,7 @@ public class AprilTagLimelightDistance extends OpMode {
     @Override
     public void init() {
         limelight3A = hardwareMap.get(Limelight3A.class, "Limelight");
-        limelight3A.pipelineSwitch(24); // april tag 0 pipeline
+        limelight3A.pipelineSwitch(0); // april tag 0 pipeline
         imu = hardwareMap.get(IMU.class, "imu");
         RevHubOrientationOnRobot revHubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.UP,
                 RevHubOrientationOnRobot.UsbFacingDirection.FORWARD);
@@ -31,6 +31,7 @@ public class AprilTagLimelightDistance extends OpMode {
     }
 
     @Override
+
     public void start() {
         limelight3A.start();
     }

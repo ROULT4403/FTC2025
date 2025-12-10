@@ -217,6 +217,7 @@ public class RAS extends LinearOpMode {
             backRightMotor.setPower(frontLeftPower);
             backLeftMotor.setPower(frontRightPower);
 
+            LLResult result = limelight.getLatestResult();
             //RPM
             endTime = (System.nanoTime() * 1e-9);
             endTicks = shoot1.getCurrentPosition();
@@ -248,17 +249,15 @@ public class RAS extends LinearOpMode {
 
 
             //Buttons
-            if (gamepad1.a) {
-                targetRPM = 4500;
+            if (gamepad1.b) {
+                targetRPM = (int) (-85.38684*(result.getTy())+3501.78737);
 
-            } else if (gamepad1.b) {
-                targetRPM = 3700;
+            }
+            else if (gamepad1.a) {
+                targetRPM = 4100;
 
-            } else if (gamepad1.x) {
-
-                targetRPM = 3500;
-
-            } else if (gamepad1.y) {
+            }
+            else if (gamepad1.y) {
                 targetRPM = 2500;
 
             } else {
@@ -299,7 +298,7 @@ public class RAS extends LinearOpMode {
             previous_error = current_error;
             previous_time = current_time;
 
-            LLResult result = limelight.getLatestResult();
+
             if (result != null) {
                 if (result.isValid()) {
                     Pose3D botpose = result.getBotpose();
