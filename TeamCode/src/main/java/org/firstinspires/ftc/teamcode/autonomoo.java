@@ -4,6 +4,8 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
+
+//ESTE NO ES UN AUTONOMO REAL
 @Autonomous(name = "Prueba Autonomo" , group = "pruebas")
 public class autonomoo extends LinearOpMode {
     DcMotor frontLeftMotor;

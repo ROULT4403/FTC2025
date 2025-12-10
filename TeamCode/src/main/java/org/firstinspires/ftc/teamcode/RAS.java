@@ -1,4 +1,6 @@
 package org.firstinspires.ftc.teamcode;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -29,6 +31,7 @@ import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
 @com.qualcomm.robotcore.eventloop.opmode.TeleOp(name="RAS", group="Linear Opmode")
 
@@ -53,7 +56,7 @@ public class RAS extends LinearOpMode {
 
     //PID
     double current_error = 0;
-    double current_time=0;
+    double current_time = 0;
 
     double k_p = 0.9;
 
@@ -75,11 +78,13 @@ public class RAS extends LinearOpMode {
     double previous_error = 0;
     double previous_time = 0;
 
-    int targetRPM=0;
+    int targetRPM = 0;
+
+    private Limelight3A limelight;
 
     //RPM
-    double startTime = (System.nanoTime()*1e-9);
-    double endTime = (System.nanoTime()*1e-9);
+    double startTime = (System.nanoTime() * 1e-9);
+    double endTime = (System.nanoTime() * 1e-9);
     int endTicks = 0;
     int startTicks = 0;
 
@@ -87,6 +92,18 @@ public class RAS extends LinearOpMode {
 
     @Override
     public void runOpMode() {
+
+        limelight = hardwareMap.get(Limelight3A.class, "Limelight");
+
+        telemetry.setMsTransmissionInterval(11);
+
+        limelight.pipelineSwitch(0);
+
+        /*
+         * Starts polling for data.
+         */
+        limelight.start();
+
         //Inicialización de motores
         frontLeftMotor = hardwareMap.get(DcMotor.class, "FWDleftDrive");
         frontRightMotor = hardwareMap.get(DcMotor.class, "FWDrightDrive");
@@ -168,7 +185,7 @@ public class RAS extends LinearOpMode {
                 driveVelocityCap = 1;
             }
 
-            if (gamepad1.right_trigger>0.5) {
+            if (gamepad1.right_trigger > 0.5) {
                 palito.setPosition(1);
 
             } else {
@@ -232,10 +249,10 @@ public class RAS extends LinearOpMode {
 
             //Buttons
             if (gamepad1.a) {
-                targetRPM =4500;
+                targetRPM = 4500;
 
             } else if (gamepad1.b) {
-                targetRPM =3700;
+                targetRPM = 3700;
 
             } else if (gamepad1.x) {
 
@@ -282,29 +299,40 @@ public class RAS extends LinearOpMode {
             previous_error = current_error;
             previous_time = current_time;
 
-            //Telemetría para ver valores en Driver Station
-            telemetry.addData("Front Left", frontLeftPower);
-            telemetry.addData("Back Left", backLeftPower);
-            telemetry.addData("Back Right", frontRightPower);
-            telemetry.addData("Front Right", backRightPower);
-            telemetry.addData("bot heading", botheading);
-            telemetry.addData("FWD/BCK deadwheel", odo.getEncoderX());
-            telemetry.addData("L/R deadwheel", odo.getEncoderY());
-            telemetry.addData("Intake", intake.getPower());
-            //telemetry.addData("Torreta", torreta.getPower());
-            telemetry.addData("Shooter1", shoot1.getPower());
-            telemetry.addData("Shooter2", shoot2.getPower());
-            telemetry.addData("Torreta", torreta.getTargetPosition());
-            telemetry.addData("RPM shooter", rpm);
-            telemetry.addData("Target RPM shooter", targetRPM);
-            telemetry.addData("Error:", current_error);
-            telemetry.addData("ticks per second", ticksPerSec);
-            telemetry.addData("process time", cycletime);
-            telemetry.addData("start ticks", startTicks);
-            telemetry.addData("end ticks", endTicks);
+            LLResult result = limelight.getLatestResult();
+            if (result != null) {
+                if (result.isValid()) {
+                    Pose3D botpose = result.getBotpose();
+                    telemetry.addData("tx", result.getTx());
+                    telemetry.addData("ty", result.getTy());
+                    telemetry.addData("Botpose", botpose.toString());
 
-            telemetry.update();
 
+                    //Telemetría para ver valores en Driver Station
+                    telemetry.addData("Front Left", frontLeftPower);
+                    telemetry.addData("Back Left", backLeftPower);
+                    telemetry.addData("Back Right", frontRightPower);
+                    telemetry.addData("Front Right", backRightPower);
+                    telemetry.addData("bot heading", botheading);
+                    telemetry.addData("FWD/BCK deadwheel", odo.getEncoderX());
+                    telemetry.addData("L/R deadwheel", odo.getEncoderY());
+                    telemetry.addData("Intake", intake.getPower());
+                    //telemetry.addData("Torreta", torreta.getPower());
+                    telemetry.addData("Shooter1", shoot1.getPower());
+                    telemetry.addData("Shooter2", shoot2.getPower());
+                    telemetry.addData("Torreta", torreta.getTargetPosition());
+                    telemetry.addData("RPM shooter", rpm);
+                    telemetry.addData("Target RPM shooter", targetRPM);
+                    telemetry.addData("Error:", current_error);
+                    telemetry.addData("ticks per second", ticksPerSec);
+                    telemetry.addData("process time", cycletime);
+                    telemetry.addData("start ticks", startTicks);
+                    telemetry.addData("end ticks", endTicks);
+
+                    telemetry.update();
+
+                }
+            }
         }
     }
 }
