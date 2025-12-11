@@ -236,6 +236,21 @@ public class RAS extends LinearOpMode {
                 tpos -= 18;
             }
             torreta.setTargetPosition(tpos);
+
+            if (tpos<=-1400){
+                tpos=-1399;
+            }
+            else if (tpos>=1500){
+                tpos=1499;
+            }
+
+            if (result.getTx()>0.1){
+                tpos+=(int)((result.getTx()*3));
+            }
+            else if (result.getTx()<-0.1){
+                tpos+=(int)((result.getTx()*3));
+            }
+
             //triggers
             if (gamepad2.right_trigger > 0.5) {
                 intake.setPower(-0.9);
@@ -250,7 +265,7 @@ public class RAS extends LinearOpMode {
 
             //Buttons
             if (gamepad1.b) {
-                targetRPM = (int) (-85.38684*(result.getTy())+3501.78737);
+                targetRPM = (int) (-85.38684*(result.getTy())+3451.78737);
 
             }
             else if (gamepad1.a) {
