@@ -229,7 +229,6 @@ public class autoThreee extends LinearOpMode {
             shooter = hardwareMap.get(DcMotor.class, "shooter2");
             shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
             shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            shooter.setPower(0.8);
         }
 
         //accion 1
@@ -246,6 +245,7 @@ public class autoThreee extends LinearOpMode {
                 return true;
             }
         }
+
         public Action distanceOne() {
             return new Shooter.distanceOne();
         }
@@ -265,11 +265,31 @@ public class autoThreee extends LinearOpMode {
                 return true;
             }
         }
+
         public Action distanceTwo() {
             return new Shooter.distanceTwo();
         }
-    }
 
+
+        //accion 3
+        public class shooterOff implements Action {
+            private boolean initialized = false;
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                if (!initialized) {
+                    shooter.setPower(0);
+                    initialized = true;
+
+                }
+                return true;
+            }
+        }
+
+        public Action shooterOff() {
+            return new Shooter.shooterOff();
+        }
+    }
 
     //route
     @Override
@@ -351,6 +371,7 @@ public class autoThreee extends LinearOpMode {
         Actions.runBlocking(new SequentialAction(
                 new ParallelAction(
                         traject3,
+                        shooter.shooterOff(),
                         intake.IntakeOn()
                 )
                 ));//intake
@@ -366,6 +387,7 @@ public class autoThreee extends LinearOpMode {
         Actions.runBlocking(new SequentialAction(
                 new ParallelAction(
                         traject6,
+                        shooter.shooterOff(),
                         intake.IntakeOn()
                 )
         ));//intake
@@ -381,6 +403,7 @@ public class autoThreee extends LinearOpMode {
         Actions.runBlocking(new SequentialAction(
                 new ParallelAction(
                         traject9,
+                        shooter.shooterOff(),
                         intake.IntakeOn()
                 )
         ));//intake

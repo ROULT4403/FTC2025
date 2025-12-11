@@ -179,7 +179,7 @@ public class RAS extends LinearOpMode {
             }
             // slow down method
             if (gamepad2.left_bumper) {
-                driveVelocityCap = .3;
+                driveVelocityCap = .4;
 
             } else {
                 driveVelocityCap = 1;
