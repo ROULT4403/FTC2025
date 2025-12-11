@@ -265,7 +265,7 @@ public class RAS extends LinearOpMode {
 
             //Buttons
             if (gamepad1.b) {
-                targetRPM = (int) (-85.38684*(result.getTy())+3451.78737);
+                targetRPM = (int) (-85.38684*(result.getTy())+3476.78737);
 
             }
             else if (gamepad1.a) {
