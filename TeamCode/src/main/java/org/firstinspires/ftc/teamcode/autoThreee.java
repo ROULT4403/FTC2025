@@ -25,7 +25,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 // Arm and Wrist target positions for each state
 
 @Config
-@Autonomous(name = "NEW_MIDDLE_RED_TEST_AUTO", group = "Autonomous")
+@Autonomous(name = "NEW_MIDDLE_BLUE_TEST_AUTO", group = "Autonomous")
 public class autoThreee extends LinearOpMode {
     private static final int TORRETA_POSITION_RIGHT_HIGH = -600; //tenemos q cambiar estas posiciones de la torreta a q este bien
     private static final int TORRETA_POSITION_RIGHT_LOW = -300;
@@ -294,7 +294,7 @@ public class autoThreee extends LinearOpMode {
     //route
     @Override
     public void runOpMode() throws InterruptedException {
-        Pose2d initialPose = new Pose2d(-61, -12, 0);
+        Pose2d initialPose = new Pose2d(-61, -48, 0);
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
         Torreta torreta = new Torreta(hardwareMap);
         Intake intake = new Intake(hardwareMap);
@@ -309,7 +309,7 @@ public class autoThreee extends LinearOpMode {
                 //shoots
                 .build();
 
-        Action traject3 = drive.actionBuilder(new Pose2d(-19, -26, 0))
+       Action traject3 = drive.actionBuilder(new Pose2d(-19, -26, 0))
                 .splineTo(new Vector2d( -12, -29), Math.toRadians(-90))
                 //intake starts
                 .strafeTo(new Vector2d( -12, -29))
@@ -350,9 +350,9 @@ public class autoThreee extends LinearOpMode {
                 .strafeTo(new Vector2d( -38, -46))
                 .build();
 
-         /* Action traject11 = drive.actionBuilder(new Pose2d(-38, -46, 0))
+         Action traject11 = drive.actionBuilder(new Pose2d(-38, -46, 0))
                 .waitSeconds(1) //shoots
-                .build(); */
+                .build();
 // end of route
 
 
@@ -364,11 +364,13 @@ public class autoThreee extends LinearOpMode {
 
         Actions.runBlocking(new SequentialAction(
                 traject2,
-                torreta.leftHigh(),
+               // torreta.leftHigh(),
                 shooter.distanceTwo()
         ));  //shoots
 
-        Actions.runBlocking(new SequentialAction(
+        Actions.runBlocking(shooter.shooterOff());
+
+       /* Actions.runBlocking(new SequentialAction(
                 new ParallelAction(
                         traject3,
                         shooter.shooterOff(),
@@ -380,7 +382,7 @@ public class autoThreee extends LinearOpMode {
 
         Actions.runBlocking(new SequentialAction(
                 traject5,
-                torreta.leftLow(),
+               // torreta.leftLow(),
                 shooter.distanceOne()
         ));  //shoots
 
@@ -396,7 +398,7 @@ public class autoThreee extends LinearOpMode {
 
         Actions.runBlocking(new SequentialAction(
                 traject8,
-                torreta.leftLow(),
+               // torreta.leftLow(),
                 shooter.distanceOne()
         ));  //shoots
 
@@ -410,7 +412,7 @@ public class autoThreee extends LinearOpMode {
 
         Actions.runBlocking(new SequentialAction(traject10));
 
-        //Actions.runBlocking(new SequentialAction(traject11));
+        //Actions.runBlocking(new SequentialAction(traject11)); */
 
 
 

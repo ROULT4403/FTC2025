@@ -52,7 +52,7 @@ public class MeepMeepTesting {
                         .splineTo(new Vector2d(-25,28), Math.toRadians(-210)) */
 
 
-         myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(-50, 48, Math.toRadians(-53))) //alianza roja
+         /* myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(-50, 48, Math.toRadians(-53))) //alianza roja
 
                  .waitSeconds(3)
                  .splineTo(new Vector2d(-13, 13), Math.toRadians(90))
@@ -70,7 +70,7 @@ public class MeepMeepTesting {
                 .strafeTo(new Vector2d(36,49))
                 .strafeTo(new Vector2d(-31,31))
 
-                        .build());
+                        .build()); */
 
         /* myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(-50, -48, Math.toRadians(53))) //alianza azul
 
@@ -90,7 +90,7 @@ public class MeepMeepTesting {
 
                 .build()); */
 
-       /* myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(-61, -12, 0)) //alianza roja daira
+        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(-61, -12, 0)) //alianza azul daira
                 .strafeTo(new Vector2d( -19, -26))
 
                 .waitSeconds(4) //shootea
@@ -120,8 +120,25 @@ public class MeepMeepTesting {
 
                 .waitSeconds(4) //shootea
 
+                .build());
+
+        /* myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(-61, 12, 0)) //alianza roja daira
+                .strafeTo(new Vector2d( -19, 26))
+                .waitSeconds(4)
+                .splineTo(new Vector2d( -12, 29), Math.toRadians(90))
+                .strafeTo(new Vector2d( -12, 29))
+                .strafeTo(new Vector2d( -12, 46))
+                .strafeTo(new Vector2d( -38, 46))
+                .waitSeconds(4)
+                .strafeTo(new Vector2d( 12, 29))
+                .strafeTo(new Vector2d( 12, 48))
+                .strafeTo(new Vector2d( -38, 46))
+                .waitSeconds(4)
+                .strafeTo(new Vector2d( 36, 29))
+                .strafeTo(new Vector2d( 36, 48))
+                .strafeTo(new Vector2d( -38, 46))
+
                 .build()); */
-        
 
         meepMeep.setBackground(MeepMeep.Background.FIELD_DECODE_JUICE_DARK) //Credits to Team Juice 16236!!
                 .setDarkMode(true)
